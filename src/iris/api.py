@@ -4206,6 +4206,34 @@ class ApplicationStats(object):
         resp.status = HTTP_200
         resp.body = ujson.dumps(stats, sort_keys=True)
 
+class PushRegister(object):
+    allow_read_no_auth = False
+
+    def on_post(self, req, resp, user):
+        data = ujson.loads(req.context['body'])
+        push_token = data.get('push_token')
+
+        if user is None or push_token is None:
+            raise HTTPBadRequest('Missing parameters for registering for push notifications')
+
+        # Open database connection
+        conn = db.engine.raw_connection()
+        cursor = conn.cursor()
+
+        cursor.execute('''INSERT IGNORE INTO target_contact (mode_id, destination, target_id)
+                          VALUES ((SELECT `id` FROM `mode` WHERE `name` = 'push'),
+                                  %s,
+                                  (SELECT `id` FROM `target` WHERE `name` = %s
+                                     AND `type_id` = (SELECT `id` FROM `target_type` WHERE `name` = 'user')))
+                          ON DUPLICATE KEY UPDATE `destination` = %s ''',
+                       (push_token, user, push_token))
+        conn.commit()
+        cursor.close()
+        conn.close()
+
+        # return 200 with empty json
+        resp.status = HTTP_200
+        resp.body = ujson.dumps({})
 
 def restrict_apps(req, resp, resource, params):
     if req.context.get('app', {}).get('name') not in resource.allowed_apps:
@@ -4310,7 +4338,7 @@ def json_error_serializer(req, resp, exception):
 
 
 def construct_falcon_api(debug, healthcheck_path, allowed_origins, iris_sender_app,
-                         zk_hosts, default_sender_addr, supported_timezones, config):
+                         zk_hosts, default_sender_addr, supported_timezones, config, mobile_active):
     cors = CORS(allow_origins_list=allowed_origins)
     api = API(middleware=[
         ReqBodyMiddleware(),
@@ -4380,6 +4408,9 @@ def construct_falcon_api(debug, healthcheck_path, allowed_origins, iris_sender_a
     if mobile_config.get('activated'):
         api.add_route('/v0/devices', Devices(mobile_config))
 
+    if mobile_active:
+        api.add_route('/v0/register/{user}', PushRegister())
+
     api.add_route('/v0/stats', Stats(config))
 
     api.add_route('/v0/timezones', SupportedTimezones(supported_timezones))
@@ -4416,9 +4447,12 @@ def get_api(config):
     zk_hosts = config['sender'].get('zookeeper_cluster', False)
     supported_timezones = config.get('supported_timezones', [])
 
+    mobile_settings = config.get('mobile', {})
+    mobile_active = mobile_settings.get('activated', False)
+
     # all notifications go through master sender for now
     app = construct_falcon_api(
-        debug, healthcheck_path, allowed_origins, iris_sender_app, zk_hosts, default_master_sender_addr, supported_timezones, config)
+        debug, healthcheck_path, allowed_origins, iris_sender_app, zk_hosts, default_master_sender_addr, supported_timezones, config, mobile_active)
 
     # Need to call this after all routes have been created
     app = ui.init(config, app)
