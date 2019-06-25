@@ -1570,6 +1570,7 @@ iris = {
           display: 'name',
           source: results,
         }).on('typeahead:select', function(e, plan){
+          $this.attr('value', plan.name);
           self.previewPlan(plan);
         }).on('input', function(e) {
           $this.attr('value', e.target.value);
@@ -2472,6 +2473,7 @@ iris = {
         app.showEditOwners = isAdmin || isOwner;
         app.allowDangerousActions = isAdmin || isOwner;
         app.allowEditingSupportedModes = isAdmin;
+        app.allowEditingTitle = isAdmin || isOwner;
 
         // This gets turned to true when the edit button is clicked if the user
         // is an admin
@@ -2607,6 +2609,14 @@ iris = {
           }
         }
       }
+
+      if (self.data.model.allowEditingTitle){
+        self.data.model.title_variable = $('#title-variable-select').val();
+        if(self.data.model.title_variable == 'null'){
+          self.data.model.title_variable = null;
+        }
+      }
+
       ajaxCalls.push($.ajax({
         url: self.data.url + self.data.application,
         data: JSON.stringify(self.data.model),
