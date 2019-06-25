@@ -2,14 +2,14 @@
 
 Branches:
 
-- `upstream` is meant to be regularly updated with the upstream remote https://github.com/linkedin/iris-relay
+- `upstream` is meant to be regularly updated with the upstream remote https://github.com/linkedin/iris
 - `pr` is meant to be used as a PR target (usually the same as upstream)
 - `master` includes Wayfair specific things and latest changes.
 - `patch` is meant to contain changes which do not include Wayfair specific things (Jenkinsfile, docker-compose.yaml), i.e. it's `master` minus these things.
 
 Pull upstream:
 
-- git remote add upstream git@github.com:linkedin/iris-relay.git
+- git remote add upstream git@github.com:linkedin/iris.git
 - git checkout upstream
 - git pull upstream
 
