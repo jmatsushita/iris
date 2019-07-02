@@ -6,7 +6,7 @@ RUN apt-get update && apt-get -y install sudo
 
 RUN sudo apt-get -y install curl python-pip uwsgi unzip virtualenv sudo python-dev libyaml-dev libsasl2-dev libldap2-dev nginx uwsgi-plugin-python uwsgi-plugin-gevent-python mysql-client \
     && sudo rm -rf /var/cache/apt/archives/*
-RUN sudo useradd -m -s /bin/bash iris
+RUN sudo useradd -m -s --uid 10001 /bin/bash iris
 RUN sudo chown -R iris:iris /home/iris /var/log/nginx /var/lib/nginx
 RUN sudo -Hu iris mkdir -p /home/iris/var/log/uwsgi /home/iris/var/log/nginx /home/iris/var/run
 
@@ -35,3 +35,6 @@ RUN sudo -Hu iris mv -f /home/iris/daemons/uwsgi-docker.yaml /home/iris/daemons/
 
 EXPOSE 16649
 CMD ["sudo", "-EHu", "iris", "bash", "-c", "source /home/iris/env/bin/activate && python /home/iris/entrypoint.py"]
+### user name recognition at runtime w/ an arbitrary uid - for OpenShift deployments
+ENTRYPOINT [ "uid_entrypoint.sh" ]
+USER 10001
