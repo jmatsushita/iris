@@ -15,6 +15,7 @@ ADD ./setup.py /home/iris/source/setup.py
 ADD ./db /home/iris/source/db
 ADD ./ops /home/iris/source/ops
 ADD ./configs /home/iris/source/configs
+ADD ./uid_entrypoint.sh /usr/bin
 
 RUN sudo chown -R iris:iris /home/iris/source
 RUN sudo mv /home/iris/source/ops/config/systemd/uwsgi-iris.service /etc/systemd/system/uwsgi-iris.service
@@ -34,7 +35,7 @@ RUN sudo -Hu iris /bin/bash -c 'source /home/iris/env/bin/activate && cd /home/i
 RUN sudo -Hu iris mv -f /home/iris/daemons/uwsgi-docker.yaml /home/iris/daemons/uwsgi.yaml
 
 EXPOSE 16649
-CMD ["sudo", "-EHu", "iris", "bash", "-c", "source /home/iris/env/bin/activate && python /home/iris/entrypoint.py"]
+CMD ["bash", "-c", "source /home/iris/env/bin/activate && python /home/iris/entrypoint.py"]
 ### user name recognition at runtime w/ an arbitrary uid - for OpenShift deployments
 ENTRYPOINT [ "uid_entrypoint.sh" ]
 USER 10001
