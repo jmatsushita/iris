@@ -37,7 +37,7 @@ RUN sudo -Hu iris mv -f /home/iris/daemons/uwsgi-docker.yaml /home/iris/daemons/
 EXPOSE 16649
 CMD ["bash", "-c", "source /home/iris/env/bin/activate && python /home/iris/entrypoint.py"]
 ### user name recognition at runtime w/ an arbitrary uid - for OpenShift deployments
-RUN chgrp -R root /home/iris
-RUN chmod -R g=u /etc/passwd /home/iris
+RUN chgrp -R root /home/iris /var/log/nginx /var/lib/nginx
+RUN chmod -R g=u /etc/passwd /home/iris /var/log/nginx /var/lib/nginx
 ENTRYPOINT [ "uid_entrypoint.sh" ]
 USER 10001
